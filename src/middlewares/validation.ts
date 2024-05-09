@@ -28,11 +28,27 @@ const getCarsQuery: RequestHandler = (req, res, next) => {
         res.status(StatusCodes.BAD_REQUEST).json(errMessages);
         return;
     }
-    
+
+    next();
+}
+
+const carsParamsId: RequestHandler = (req, res, next) => {
+    const carsParamIdResult = validationResult(req);
+
+    if (!carsParamIdResult.isEmpty()) {
+        const errMessages: { error: string }[] = [];
+        carsParamIdResult.array().forEach((v, i) => {
+            errMessages.push({ error: v.msg});
+        })
+        res.status(StatusCodes.BAD_REQUEST).json(errMessages);
+        return;    
+    }
+
     next();
 }
 
 export default {
     addCarBody,
-    getCarsQuery
+    getCarsQuery,
+    carsParamsId
 }

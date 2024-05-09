@@ -51,12 +51,8 @@ const getCars = (req, res) => {
 };
 exports.getCars = getCars;
 const getCarById = (req, res) => {
-    const parsedInt = parseInt(req.params.id);
-    if (isNaN(parsedInt)) {
-        res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ msg: 'Invalid ID' });
-        return;
-    }
-    const carFound = cars_1.default.find(c => +c.id === parsedInt);
+    const { id } = (0, express_validator_1.matchedData)(req);
+    const carFound = cars_1.default.find(c => c.id === id);
     if (!carFound) {
         res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: 'Car is not found' });
         return;

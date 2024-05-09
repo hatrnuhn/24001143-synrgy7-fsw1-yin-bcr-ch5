@@ -51,18 +51,14 @@ export const getCars = (req: Request<{}, {}, {}, GetCarsQuery>, res: Response) =
         default:
             break;
     } 
-    
+
     res.status(StatusCodes.OK).json(carsFiltered);
 }
 
 export const getCarById = (req: Request, res: Response) => {
-    const parsedInt = parseInt(req.params.id);
-    if (isNaN(parsedInt)) {
-        res.status(StatusCodes.BAD_REQUEST).json( { msg: 'Invalid ID'} );
-        return;
-    } 
-
-    const carFound = cars.find(c => +c.id === parsedInt);
+    const { id } = matchedData(req);
+    
+    const carFound = cars.find(c => c.id === id);
 
     if (!carFound) {
         res.status(StatusCodes.NOT_FOUND).json( { msg: 'Car is not found'} );

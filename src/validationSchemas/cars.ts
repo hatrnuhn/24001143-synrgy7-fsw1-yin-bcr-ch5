@@ -149,3 +149,16 @@ export const getCarsQuerySchema = {
         }
     }
 }
+
+export const carsParamIdSchema = {
+    id: {
+        notEmpty: {
+            errorMessage: 'ID parameter cannot be empty'
+        },
+        toLowerCase: true,
+        isUUID: {
+            version: 'all',
+            errorMessage: 'Invalid ID parameter: must be an UUID'
+        }
+    },
+}

@@ -11,7 +11,7 @@ const validation_1 = __importDefault(require("../middlewares/validation"));
 const router = (0, express_1.Router)();
 router.post('/', (0, express_validator_1.checkSchema)(cars_2.addCarBodySchema, ['body']), validation_1.default.addCarBody, cars_1.addCar);
 router.get('/', (0, express_validator_1.checkSchema)(cars_2.getCarsQuerySchema, ['query']), validation_1.default.getCarsQuery, cars_1.getCars);
-router.get('/:id', cars_1.getCarById);
+router.get('/:id', (0, express_validator_1.checkSchema)(cars_2.carsParamIdSchema, ['params']), validation_1.default.carsParamsId, cars_1.getCarById);
 router.put('/:id', cars_1.updateCar);
 router.delete('/:id', cars_1.deleteCar);
 exports.default = router;

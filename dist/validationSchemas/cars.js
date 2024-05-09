@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCarsQuerySchema = exports.addCarBodySchema = void 0;
+exports.carsParamIdSchema = exports.getCarsQuerySchema = exports.addCarBodySchema = void 0;
 exports.addCarBodySchema = {
     plate: {
         notEmpty: {
@@ -150,5 +150,17 @@ exports.getCarsQuerySchema = {
             errorMessage: 'Invalid sortByYear query value'
         }
     }
+};
+exports.carsParamIdSchema = {
+    id: {
+        notEmpty: {
+            errorMessage: 'ID parameter cannot be empty'
+        },
+        toLowerCase: true,
+        isUUID: {
+            version: 'all',
+            errorMessage: 'Invalid ID parameter: must be an UUID'
+        }
+    },
 };
 //# sourceMappingURL=cars.js.map

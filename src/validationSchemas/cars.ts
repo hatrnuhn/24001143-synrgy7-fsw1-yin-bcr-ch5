@@ -1,4 +1,4 @@
-export const addCarBodySchema = {
+export const addUpdateCarBodySchema = {
     plate: {
         notEmpty: {
             errorMessage: 'Plate cannot be empty'

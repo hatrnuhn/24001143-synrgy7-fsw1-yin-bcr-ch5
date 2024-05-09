@@ -2,7 +2,7 @@ import { RequestHandler } from "express";
 import { validationResult } from "express-validator";
 import { StatusCodes } from "http-status-codes";
 
-const addCarBody: RequestHandler = (req, res, next) => {
+const addUpdateCarBody: RequestHandler = (req, res, next) => {
     const addCarBodyResult = validationResult(req);
 
     if (!addCarBodyResult.isEmpty()) {
@@ -48,7 +48,7 @@ const carsParamsId: RequestHandler = (req, res, next) => {
 }
 
 export default {
-    addCarBody,
+    addUpdateCarBody,
     getCarsQuery,
     carsParamsId
 }

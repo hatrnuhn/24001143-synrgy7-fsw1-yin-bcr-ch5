@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.carsParamIdSchema = exports.getCarsQuerySchema = exports.addCarBodySchema = void 0;
-exports.addCarBodySchema = {
+exports.carsParamIdSchema = exports.getCarsQuerySchema = exports.addUpdateCarBodySchema = void 0;
+exports.addUpdateCarBodySchema = {
     plate: {
         notEmpty: {
             errorMessage: 'Plate cannot be empty'

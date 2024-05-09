@@ -55,10 +55,11 @@ const getCarById = (req, res) => {
 exports.getCarById = getCarById;
 const updateCar = (req, res) => {
     const index = res.locals.carFoundIndex;
-    const updateCarBodyMatches = {};
-    const newCar = Object.assign(Object.assign({}, updateCarBodyMatches), { id: (0, uuid_1.v4)() });
+    const updateCarBodyMatches = (0, express_validator_1.matchedData)(req);
+    console.log(updateCarBodyMatches);
+    const newCar = Object.assign({ id: cars_1.cars[index].id }, updateCarBodyMatches);
     cars_1.cars[index] = newCar;
-    res.status(http_status_codes_1.StatusCodes.ACCEPTED).json();
+    res.status(http_status_codes_1.StatusCodes.ACCEPTED).json(cars_1.cars[index]);
 };
 exports.updateCar = updateCar;
 const deleteCar = (req, res) => {

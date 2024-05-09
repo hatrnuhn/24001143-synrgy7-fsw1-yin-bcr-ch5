@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import { Car, cars } from '../data/cars';
 import { StatusCodes } from 'http-status-codes';
-import { AddCarReqBody, GetCarsQuery } from '../dtos/cars';
+import { AddUpdateCarReqBody, GetCarsQuery } from '../dtos/cars';
 import { v4 as uuidv4 } from 'uuid';
 import { matchedData } from 'express-validator';
 
-export const addCar = (req: Request<{}, {}, AddCarReqBody, {}>, res: Response) => {
+export const addCar = (req: Request<{}, {}, AddUpdateCarReqBody>, res: Response) => {
     const addCarBodyMatches = matchedData(req);
 
     const newUuid = uuidv4();
@@ -62,17 +62,18 @@ export const getCarById = (req: Request, res: Response) => {
     res.status(StatusCodes.OK).json(cars[index]);
 }
 
-export const updateCar = (req: Request, res: Response) => {
+export const updateCar = (req: Request<{}, {}, AddUpdateCarReqBody>, res: Response) => {
     const index = res.locals.carFoundIndex;
-    const updateCarBodyMatches = {} as Car;
+    const updateCarBodyMatches = matchedData(req);
+    console.log(updateCarBodyMatches);
     const newCar = {
+        id: cars[index].id,
         ...updateCarBodyMatches,
-        id: uuidv4(),
     };
 
-    cars[index] = newCar;
+    cars[index] = newCar as Car;
 
-    res.status(StatusCodes.ACCEPTED).json();
+    res.status(StatusCodes.ACCEPTED).json(cars[index]);
 }
 
 export const deleteCar = (req: Request, res: Response) => {

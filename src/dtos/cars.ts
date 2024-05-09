@@ -1,4 +1,4 @@
-export interface AddCarReqBody {
+export interface AddUpdateCarReqBody {
     plate: string,
     transmission: string,
     manufacture: string,

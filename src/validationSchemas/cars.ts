@@ -72,3 +72,80 @@ export const addCarBodySchema = {
         }
     }
 }
+
+export const getCarsQuerySchema = {
+    availability: {
+        optional: {
+            options: {
+                checkFalsy: true
+            }
+        },
+        toLowerCase: true,
+        isIn: {
+            options: [['yes', 'no', 'all']],
+            errorMessage: 'Invalid availability query value'
+        }
+    },
+    manufacture: {
+        optional: {
+            options: {
+                checkFalsy: true
+            }
+        },
+        toLowerCase: true,
+        isAscii: {
+            errorMessage: 'Manufacture chars must be ASCII chars'
+        }
+    },
+    year: {
+        optional: {
+            options: {
+                checkFalsy: true
+            }
+        },
+        isLength: {
+            options: {
+                min: 4,
+                max: 4
+            },
+            errorMessage: 'sortByYear value must contain 4 characters'
+        },
+        isNumeric: {
+            options: {
+                no_symbols: true
+            },
+            errorMessage: 'Year query must be numeric'
+        },
+        toInt: true,
+        isInt: {
+            errorMessage: 'Year query is not an integer'
+        }
+    },
+    transmission: {
+        optional: {
+            options: {
+                checkFalsy: true
+            }
+        },
+        toLowerCase: true,
+        isAscii: {
+            errorMessage: 'If provided, transmission chars must be ASCII chars'
+        },
+        isIn: {
+            options: [['automatic', 'automanual', 'manual']],
+            errorMessage: 'Invalid transmission query value'
+        }
+    },
+    sortByYear: {
+        optional: {
+            options: {
+                checkFalsy: true
+            }
+        },
+        toLowerCase: true,
+        isIn: {
+            options: [['asc', 'desc']],
+            errorMessage: 'Invalid sortByYear query value'
+        }
+    }
+}

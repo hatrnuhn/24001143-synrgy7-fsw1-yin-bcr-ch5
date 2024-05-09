@@ -1,4 +1,4 @@
-import { Request, RequestHandler, Response } from "express";
+import { RequestHandler } from "express";
 import { validationResult } from "express-validator";
 import { StatusCodes } from "http-status-codes";
 
@@ -17,6 +17,22 @@ const addCarBody: RequestHandler = (req, res, next) => {
     next();
 }
 
+const getCarsQuery: RequestHandler = (req, res, next) => {
+    const getCarsQueryResult = validationResult(req);
+
+    if (!getCarsQueryResult.isEmpty()) {
+        const errMessages: { error: string }[] = [];
+        getCarsQueryResult.array().forEach((v, i) => {
+            errMessages.push({ error: v.msg});
+        })
+        res.status(StatusCodes.BAD_REQUEST).json(errMessages);
+        return;
+    }
+    
+    next();
+}
+
 export default {
-    addCarBody
+    addCarBody,
+    getCarsQuery
 }

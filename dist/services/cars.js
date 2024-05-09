@@ -17,9 +17,37 @@ const addCar = (req, res) => {
 };
 exports.addCar = addCar;
 const getCars = (req, res) => {
-    // filter by manufacture, year, availability, transmission
-    // sort by year
-    res.status(http_status_codes_1.StatusCodes.OK).json(cars_1.default);
+    const { availability, manufacture, transmission, sortByYear, year } = (0, express_validator_1.matchedData)(req);
+    let carsFiltered = [...cars_1.default];
+    switch (availability) {
+        case 'yes':
+            carsFiltered = carsFiltered.filter(c => c.available);
+            break;
+        case 'no':
+            carsFiltered = carsFiltered.filter(c => (!c.available));
+            break;
+        case 'all':
+            break;
+        default:
+            break;
+    }
+    if (manufacture)
+        carsFiltered = carsFiltered.filter(c => c.manufacture.toLowerCase().includes(manufacture));
+    if (year)
+        carsFiltered = carsFiltered.filter(c => +c.year === +year);
+    if (transmission)
+        carsFiltered = carsFiltered.filter(c => c.transmission.toLowerCase().includes(transmission));
+    switch (sortByYear) {
+        case 'asc':
+            carsFiltered.sort((a, b) => a.year - b.year);
+            break;
+        case 'desc':
+            carsFiltered.sort((a, b) => b.year - a.year);
+            break;
+        default:
+            break;
+    }
+    res.status(http_status_codes_1.StatusCodes.OK).json(carsFiltered);
 };
 exports.getCars = getCars;
 const getCarById = (req, res) => {

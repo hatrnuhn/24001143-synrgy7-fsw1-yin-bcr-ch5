@@ -11,7 +11,7 @@ export interface Car {
     specs: string[]
 }
 
-export interface CarReqBody {
+export interface AddCarReqBody {
     plate: string,
     transmission: string,
     manufacture: string,
@@ -21,4 +21,12 @@ export interface CarReqBody {
     year: number,
     options: string[],
     specs: string[]
+}
+
+export interface GetCarsQuery {
+    availability?: string,
+    manufacture?: string,
+    sortByYear?: string,
+    transmission?: string,
+    year?: string
 }

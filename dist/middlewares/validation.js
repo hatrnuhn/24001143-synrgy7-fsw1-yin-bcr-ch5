@@ -14,7 +14,20 @@ const addCarBody = (req, res, next) => {
     }
     next();
 };
+const getCarsQuery = (req, res, next) => {
+    const getCarsQueryResult = (0, express_validator_1.validationResult)(req);
+    if (!getCarsQueryResult.isEmpty()) {
+        const errMessages = [];
+        getCarsQueryResult.array().forEach((v, i) => {
+            errMessages.push({ error: v.msg });
+        });
+        res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json(errMessages);
+        return;
+    }
+    next();
+};
 exports.default = {
-    addCarBody
+    addCarBody,
+    getCarsQuery
 };
 //# sourceMappingURL=validation.js.map

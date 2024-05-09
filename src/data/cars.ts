@@ -1,4 +1,4 @@
-const cars = [
+const carsOrigin = [
 	{
 		id: "6e2bc663-5197-441a-957b-bc75e4a2da7c",
 		plate: "DBH-3491",
@@ -679,4 +679,18 @@ const cars = [
 	}
 ];
 
-export default cars;
+export interface Car {
+    id: string,
+    plate: string,
+    transmission: string,
+    manufacture: string,
+    model: string,
+    available: boolean,
+    type: string,
+    year: number,
+    options: string[],
+    specs: string[],
+    deleted?: boolean
+}
+
+export const cars = [...carsOrigin as Car[]];

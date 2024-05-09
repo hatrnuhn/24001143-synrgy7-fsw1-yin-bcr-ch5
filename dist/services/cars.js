@@ -1,10 +1,7 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteCar = exports.updateCar = exports.getCarById = exports.getCars = exports.addCar = void 0;
-const cars_1 = __importDefault(require("../data/cars"));
+const cars_1 = require("../data/cars");
 const http_status_codes_1 = require("http-status-codes");
 const uuid_1 = require("uuid");
 const express_validator_1 = require("express-validator");
@@ -12,13 +9,14 @@ const addCar = (req, res) => {
     const addCarBodyMatches = (0, express_validator_1.matchedData)(req);
     const newUuid = (0, uuid_1.v4)();
     const newCar = Object.assign({ id: newUuid }, addCarBodyMatches);
-    cars_1.default.push(newCar);
+    cars_1.cars.push(newCar);
     res.status(http_status_codes_1.StatusCodes.CREATED).json(newCar);
 };
 exports.addCar = addCar;
 const getCars = (req, res) => {
     const { availability, manufacture, transmission, sortByYear, year } = (0, express_validator_1.matchedData)(req);
-    let carsFiltered = [...cars_1.default];
+    let carsFiltered = [...cars_1.cars];
+    carsFiltered = carsFiltered.filter(c => !c.deleted);
     switch (availability) {
         case 'yes':
             carsFiltered = carsFiltered.filter(c => c.available);
@@ -51,20 +49,21 @@ const getCars = (req, res) => {
 };
 exports.getCars = getCars;
 const getCarById = (req, res) => {
-    const { id } = (0, express_validator_1.matchedData)(req);
-    const carFound = cars_1.default.find(c => c.id === id);
-    if (!carFound) {
-        res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: 'Car is not found' });
-        return;
-    }
-    res.status(http_status_codes_1.StatusCodes.OK).json(carFound);
+    const index = res.locals.carFoundIndex;
+    res.status(http_status_codes_1.StatusCodes.OK).json(cars_1.cars[index]);
 };
 exports.getCarById = getCarById;
 const updateCar = (req, res) => {
+    const index = res.locals.carFoundIndex;
+    const updateCarBodyMatches = {};
+    const newCar = Object.assign(Object.assign({}, updateCarBodyMatches), { id: (0, uuid_1.v4)() });
+    cars_1.cars[index] = newCar;
     res.status(http_status_codes_1.StatusCodes.ACCEPTED).json();
 };
 exports.updateCar = updateCar;
 const deleteCar = (req, res) => {
+    const index = res.locals.carFoundIndex;
+    cars_1.cars[index].deleted = true;
     res.sendStatus(http_status_codes_1.StatusCodes.NO_CONTENT);
 };
 exports.deleteCar = deleteCar;

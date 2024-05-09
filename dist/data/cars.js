@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const cars = [
+exports.cars = void 0;
+const carsOrigin = [
     {
         id: "6e2bc663-5197-441a-957b-bc75e4a2da7c",
         plate: "DBH-3491",
@@ -680,5 +681,5 @@ const cars = [
         ]
     }
 ];
-exports.default = cars;
+exports.cars = [...carsOrigin];
 //# sourceMappingURL=cars.js.map

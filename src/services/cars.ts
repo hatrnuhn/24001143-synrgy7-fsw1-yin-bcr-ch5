@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import cars from '../data/cars';
+import { Car, cars } from '../data/cars';
 import { StatusCodes } from 'http-status-codes';
-import { Car, AddCarReqBody, GetCarsQuery } from '../dtos/cars';
+import { AddCarReqBody, GetCarsQuery } from '../dtos/cars';
 import { v4 as uuidv4 } from 'uuid';
 import { matchedData } from 'express-validator';
 
@@ -24,6 +24,8 @@ export const getCars = (req: Request<{}, {}, {}, GetCarsQuery>, res: Response) =
     
     let carsFiltered = [...cars];
 
+    carsFiltered = carsFiltered.filter(c => !c.deleted);
+    
     switch (availability) {
         case 'yes':
             carsFiltered = carsFiltered.filter(c => c.available);
@@ -56,22 +58,27 @@ export const getCars = (req: Request<{}, {}, {}, GetCarsQuery>, res: Response) =
 }
 
 export const getCarById = (req: Request, res: Response) => {
-    const { id } = matchedData(req);
-    
-    const carFound = cars.find(c => c.id === id);
-
-    if (!carFound) {
-        res.status(StatusCodes.NOT_FOUND).json( { msg: 'Car is not found'} );
-        return;
-    }
-
-    res.status(StatusCodes.OK).json(carFound);
+    const index = res.locals.carFoundIndex;
+    res.status(StatusCodes.OK).json(cars[index]);
 }
 
 export const updateCar = (req: Request, res: Response) => {
+    const index = res.locals.carFoundIndex;
+    const updateCarBodyMatches = {} as Car;
+    const newCar = {
+        ...updateCarBodyMatches,
+        id: uuidv4(),
+    };
+
+    cars[index] = newCar;
+
     res.status(StatusCodes.ACCEPTED).json();
 }
 
 export const deleteCar = (req: Request, res: Response) => {
+    const index = res.locals.carFoundIndex;
+
+    cars[index].deleted = true;
+
     res.sendStatus(StatusCodes.NO_CONTENT);
 }

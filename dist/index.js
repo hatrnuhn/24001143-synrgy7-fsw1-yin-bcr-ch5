@@ -5,11 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const routes_1 = __importDefault(require("./routes"));
+const utils_1 = require("./middlewares/utils");
 const PORT = process.env.PORT || 3000;
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use(express_1.default.static('public'));
 app.use(express_1.default.urlencoded({ extended: false }));
-app.use('/api', routes_1.default);
+app.use('/api', utils_1.printRequest, routes_1.default);
 app.listen(PORT, () => console.log(`Running on port ${PORT}`));
 //# sourceMappingURL=index.js.map

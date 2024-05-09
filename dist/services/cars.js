@@ -10,7 +10,6 @@ const uuid_1 = require("uuid");
 const express_validator_1 = require("express-validator");
 const addCar = (req, res) => {
     const addCarBodyMatches = (0, express_validator_1.matchedData)(req);
-    console.log(addCarBodyMatches);
     const newUuid = (0, uuid_1.v4)();
     const newCar = Object.assign({ id: newUuid }, addCarBodyMatches);
     cars_1.default.push(newCar);

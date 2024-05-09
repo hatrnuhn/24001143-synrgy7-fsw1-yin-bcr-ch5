@@ -7,7 +7,6 @@ import { matchedData } from 'express-validator';
 
 export const addCar = (req: Request<{}, {}, CarReqBody, {}>, res: Response) => {
     const addCarBodyMatches = matchedData(req);
-    console.log(addCarBodyMatches);
 
     const newUuid = uuidv4();
 

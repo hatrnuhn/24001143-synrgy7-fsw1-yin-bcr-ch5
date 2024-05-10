@@ -1,71 +1,123 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteCar = exports.updateCar = exports.getCarById = exports.getCars = exports.addCar = void 0;
-const cars_1 = require("../data/cars");
 const http_status_codes_1 = require("http-status-codes");
 const uuid_1 = require("uuid");
 const express_validator_1 = require("express-validator");
+const cars_1 = __importDefault(require("../mongoose/schemas/cars"));
+const utils_1 = require("../mongoose/utils");
 const addCar = (req, res) => {
     const addCarBodyMatches = (0, express_validator_1.matchedData)(req);
     const newUuid = (0, uuid_1.v4)();
     const newCar = Object.assign({ id: newUuid }, addCarBodyMatches);
-    cars_1.cars.push(newCar);
-    res.status(http_status_codes_1.StatusCodes.CREATED).json(newCar);
+    const savedCar = (0, utils_1.saveToDB)('Car', newCar, cars_1.default);
+    savedCar
+        .then(v => {
+        console.log(`Saved to database, id: ${v.id}`);
+        res.status(http_status_codes_1.StatusCodes.CREATED).json(newCar);
+    })
+        .catch(err => res.sendStatus(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR));
 };
 exports.addCar = addCar;
-const getCars = (req, res) => {
-    const { availability, manufacture, transmission, sortByYear, year } = (0, express_validator_1.matchedData)(req);
-    let carsFiltered = [...cars_1.cars];
-    carsFiltered = carsFiltered.filter(c => !c.deleted);
-    switch (availability) {
-        case 'yes':
-            carsFiltered = carsFiltered.filter(c => c.available);
-            break;
-        case 'no':
-            carsFiltered = carsFiltered.filter(c => (!c.available));
-            break;
-        case 'all':
-            break;
-        default:
-            break;
+const getCars = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { availability, manufacture, transmission, sortByYear, year } = (0, express_validator_1.matchedData)(req);
+        const carsFromDB = yield (0, utils_1.getDataFromDB)(cars_1.default);
+        let carsFiltered = (0, utils_1.cleanCarsFromDB)(carsFromDB);
+        carsFiltered = carsFiltered.filter(c => !c.deleted);
+        switch (availability) {
+            case 'yes':
+                carsFiltered = carsFiltered.filter(c => c.available);
+                break;
+            case 'no':
+                carsFiltered = carsFiltered.filter(c => (!c.available));
+                break;
+            case 'all':
+                break;
+            default:
+                break;
+        }
+        if (manufacture)
+            carsFiltered = carsFiltered.filter(c => c.manufacture.toLowerCase().includes(manufacture));
+        if (year)
+            carsFiltered = carsFiltered.filter(c => +c.year === +year);
+        if (transmission)
+            carsFiltered = carsFiltered.filter(c => c.transmission.toLowerCase().includes(transmission));
+        switch (sortByYear) {
+            case 'asc':
+                carsFiltered.sort((a, b) => a.year - b.year);
+                break;
+            case 'desc':
+                carsFiltered.sort((a, b) => b.year - a.year);
+                break;
+            default:
+                break;
+        }
+        res.status(http_status_codes_1.StatusCodes.OK).json(carsFiltered);
     }
-    if (manufacture)
-        carsFiltered = carsFiltered.filter(c => c.manufacture.toLowerCase().includes(manufacture));
-    if (year)
-        carsFiltered = carsFiltered.filter(c => +c.year === +year);
-    if (transmission)
-        carsFiltered = carsFiltered.filter(c => c.transmission.toLowerCase().includes(transmission));
-    switch (sortByYear) {
-        case 'asc':
-            carsFiltered.sort((a, b) => a.year - b.year);
-            break;
-        case 'desc':
-            carsFiltered.sort((a, b) => b.year - a.year);
-            break;
-        default:
-            break;
+    catch (err) {
+        console.log(err);
+        res.sendStatus(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR);
     }
-    res.status(http_status_codes_1.StatusCodes.OK).json(carsFiltered);
-};
+});
 exports.getCars = getCars;
 const getCarById = (req, res) => {
     const index = res.locals.carFoundIndex;
-    res.status(http_status_codes_1.StatusCodes.OK).json(cars_1.cars[index]);
+    const carsFromDB = (0, utils_1.getDataFromDB)(cars_1.default);
+    carsFromDB
+        .then(carsDB => {
+        const cars = (0, utils_1.cleanCarsFromDB)(carsDB);
+        console.log(cars[index]);
+        res.status(http_status_codes_1.StatusCodes.OK).json(cars[index]);
+    })
+        .catch(err => {
+        console.log(err);
+        res.sendStatus(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR);
+    });
 };
 exports.getCarById = getCarById;
 const updateCar = (req, res) => {
     const index = res.locals.carFoundIndex;
     const updateCarBodyMatches = (0, express_validator_1.matchedData)(req);
-    console.log(updateCarBodyMatches);
-    const newCar = Object.assign({ id: cars_1.cars[index].id }, updateCarBodyMatches);
-    cars_1.cars[index] = newCar;
-    res.status(http_status_codes_1.StatusCodes.ACCEPTED).json(cars_1.cars[index]);
+    const carsFromDB = (0, utils_1.getDataFromDB)(cars_1.default);
+    carsFromDB
+        .then(carsDB => {
+        const cars = (0, utils_1.cleanCarsFromDB)(carsDB);
+        const newCar = Object.assign({ id: cars[index].id }, updateCarBodyMatches);
+        cars[index] = newCar;
+        res.status(http_status_codes_1.StatusCodes.ACCEPTED).json(cars[index]);
+    })
+        .catch(err => {
+        console.log(err);
+        res.sendStatus(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR);
+    });
 };
 exports.updateCar = updateCar;
 const deleteCar = (req, res) => {
     const index = res.locals.carFoundIndex;
-    cars_1.cars[index].deleted = true;
-    res.sendStatus(http_status_codes_1.StatusCodes.NO_CONTENT);
+    const carsFromDB = (0, utils_1.getDataFromDB)(cars_1.default);
+    carsFromDB
+        .then(carsDB => {
+        const cars = (0, utils_1.cleanCarsFromDB)(carsDB);
+        cars[index].deleted = true;
+        http_status_codes_1.StatusCodes.NO_CONTENT;
+    })
+        .catch(err => {
+        console.log(err);
+        res.sendStatus(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR);
+    });
 };
 exports.deleteCar = deleteCar;
 //# sourceMappingURL=cars.js.map

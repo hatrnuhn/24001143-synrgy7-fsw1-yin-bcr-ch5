@@ -1,4 +1,7 @@
-const carsOrigin = [
+import CarSchema from "../mongoose/schemas/cars";
+import { saveToDB } from "../mongoose/utils";
+
+export const carsOrigin = [
 	{
 		id: "6e2bc663-5197-441a-957b-bc75e4a2da7c",
 		plate: "DBH-3491",

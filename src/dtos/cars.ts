@@ -7,7 +7,8 @@ export interface AddUpdateCarReqBody {
     type: string,
     year: number,
     options: string[],
-    specs: string[]
+    specs: string[],
+    deleted?: boolean
 }
 
 export interface GetCarsQuery {

@@ -70,6 +70,13 @@ export const addUpdateCarBodySchema = {
         isArray: {
             errorMessage: 'Specs must be an array'
         }
+    },
+    deleted: {
+        optional: {
+            options: {
+                values: undefined
+            }
+        },
     }
 }
 

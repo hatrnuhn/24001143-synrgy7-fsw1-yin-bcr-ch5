@@ -1,3 +1,5 @@
+//// To populate original cars data, if DB is deleted
+
 // import CarSchema from "./mongoose/schemas/cars";
 // import { saveToDB } from "./mongoose/utils";
 // import { cars } from './data/cars';

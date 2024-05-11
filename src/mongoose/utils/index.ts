@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { Document, Query } from 'mongoose';
 import { Car } from '../../data/cars';
 
 export const saveToDB = async (name: string, payload: any, model: typeof mongoose.Model) => {
@@ -23,21 +23,27 @@ export const cleanCarsFromDB = (carsFromDB: any[]) => {
     const cleanedCars: Car[] = [];
 
     carsFromDB.forEach(c => {
-        const car: Car = {
-            id: c.id,
-            plate: c.plate,
-            transmission: c.transmission,
-            manufacture: c.manufacture,
-            model: c.model,
-            available: c.available,
-            type: c.type,
-            year: c.year,
-            options: c.options,
-            specs: c.specs
-        }
+        const car = cleanCarFromDB(c);
 
         cleanedCars.push(car);
     });
 
     return cleanedCars;
+}
+
+export const cleanCarFromDB = (c: any) => {
+    const car: Car = {
+        id: c.id,
+        plate: c.plate,
+        transmission: c.transmission,
+        manufacture: c.manufacture,
+        model: c.model,
+        available: c.available,
+        type: c.type,
+        year: c.year,
+        options: c.options,
+        specs: c.specs
+    }
+
+    return car;
 }

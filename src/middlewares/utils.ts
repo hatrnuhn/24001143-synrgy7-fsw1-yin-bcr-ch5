@@ -1,7 +1,8 @@
 import { RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
-import { cars } from "../data/cars";
 import { matchedData } from "express-validator";
+import { getDataFromDB } from "../mongoose/utils";
+import CarsModel from "../mongoose/schemas/cars";
 
 export const printRequest: RequestHandler = (req, res, next) => {
     const { method, path } = req;
@@ -11,15 +12,19 @@ export const printRequest: RequestHandler = (req, res, next) => {
 
 export const checkIdExistence: RequestHandler = (req, res, next) => {
     const { id } = matchedData(req);
-    
-    const carFoundIndex = cars.findIndex(c => c.id === id && !c.deleted);
+    const carsFromDB = getDataFromDB(CarsModel);
+    carsFromDB
+        .then(cars => {
+            const carFound = cars.find(c => c.id === id && !c.deleted);
+            if (!carFound) {
+                res.status(StatusCodes.NOT_FOUND).json( { msg: 'Car is not found'} );
+                return;
+            }
 
-    if (carFoundIndex === -1) {
-        res.status(StatusCodes.NOT_FOUND).json( { msg: 'Car is not found'} );
-        return;
-    }
-
-    res.locals.carFoundIndex = carFoundIndex;
-
-    next()
+            next();
+        })
+        .catch(err => {
+            console.log(err);
+            res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+        })
 }

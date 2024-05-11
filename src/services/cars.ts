@@ -5,7 +5,7 @@ import { AddUpdateCarReqBody, GetCarsQuery } from '../dtos/cars';
 import { v4 as uuidv4 } from 'uuid';
 import { matchedData } from 'express-validator';
 import CarsModel from '../mongoose/schemas/cars';
-import { saveToDB, getDataFromDB, cleanCarsFromDB } from '../mongoose/utils';
+import { saveToDB, getDataFromDB, cleanCarsFromDB, cleanCarFromDB } from '../mongoose/utils';
 
 export const addCar = (req: Request<{}, {}, AddUpdateCarReqBody>, res: Response) => {
     const addCarBodyMatches = matchedData(req);
@@ -86,39 +86,47 @@ export const getCarById = (req: Request, res: Response) => {
 }
 
 export const updateCar = (req: Request<{}, {}, AddUpdateCarReqBody>, res: Response) => {
-    const index = res.locals.carFoundIndex;
-    const updateCarBodyMatches = matchedData(req);
-    const carsFromDB = getDataFromDB(CarsModel);
-    carsFromDB
-        .then(carsDB => {
-            const cars = cleanCarsFromDB(carsDB);
+    const { id, ...updateCarBodyMatches } = matchedData(req);
 
-            const newCar = {
-                id: cars[index].id,
-                ...updateCarBodyMatches,
-            };
-            cars[index] = newCar as Car;
+    const docs = CarsModel.findOne({ id: id }).orFail();
+    docs
+        .then(c => {
+                c.plate = updateCarBodyMatches.plate;
+                c.transmission = updateCarBodyMatches.transmission;
+                c.manufacture = updateCarBodyMatches.manufacture;
+                c.model = updateCarBodyMatches.model;
+                c.available = updateCarBodyMatches.available;
+                c.type = updateCarBodyMatches.type;
+                c.year = updateCarBodyMatches.year;
+                c.options = updateCarBodyMatches.options;
+                c.deleted = updateCarBodyMatches.deleted;
 
-            res.status(StatusCodes.ACCEPTED).json(cars[index]);
-        })
-        .catch(err => {
+                c.save();
+    
+                res.status(StatusCodes.ACCEPTED).json(cleanCarFromDB(c));
+            }
+        )
+        .catch( err => {
             console.log(err);
             res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
-        })
+        });
 }
 
 export const deleteCar = (req: Request, res: Response) => {
-    const index = res.locals.carFoundIndex;
+    const { id } = matchedData(req);
 
-    const carsFromDB = getDataFromDB(CarsModel);
-    carsFromDB
-        .then(carsDB => {
-            const cars = cleanCarsFromDB(carsDB);
-            cars[index].deleted = true;
-            StatusCodes.NO_CONTENT
-        })
-        .catch(err => {
+    const docs = CarsModel.findOne({ id: id }).orFail();
+    docs
+        .then(c => {
+                c.deleted = true;
+
+                c.save();
+    
+                res.sendStatus(StatusCodes.NO_CONTENT);
+            }
+        )
+        .catch( err => {
             console.log(err);
             res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
-        })
+        });
 }

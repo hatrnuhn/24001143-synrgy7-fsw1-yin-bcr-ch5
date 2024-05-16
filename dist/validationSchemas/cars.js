@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.carsParamIdSchema = exports.getCarsQuerySchema = exports.addUpdateCarBodySchema = void 0;
+exports.carsParamIdSchema = exports.getCarsQuerySchema = exports.addUpdateCarDeletionTimestampBodyValueSchema = exports.addUpdateCarBodySchema = void 0;
 exports.addUpdateCarBodySchema = {
     plate: {
         notEmpty: {
@@ -26,6 +26,26 @@ exports.addUpdateCarBodySchema = {
             errorMessage: 'Manufacture can only be a string'
         }
     },
+    rate: {
+        notEmpty: {
+            errorMessage: 'Rate must not be empty'
+        },
+        isString: {
+            errorMessage: 'Input rate as a string'
+        },
+        isNumeric: {
+            no_symbols: true,
+            errorMessage: 'Rate must be numeric'
+        }
+    },
+    description: {
+        notEmpty: {
+            errorMessage: 'Please input some descriptions'
+        },
+        isString: {
+            errorMessage: 'Descriptions can only be a string'
+        },
+    },
     model: {
         notEmpty: {
             errorMessage: 'Model cannot be empty'
@@ -34,12 +54,15 @@ exports.addUpdateCarBodySchema = {
             errorMessage: 'Model must be a string'
         }
     },
-    available: {
+    availableDate: {
         notEmpty: {
             errorMessage: 'Must specify availability'
         },
-        isBoolean: {
-            errorMessage: 'Availability must be boolean'
+        isString: {
+            errorMessage: 'availableDate must be a string'
+        },
+        isISO8601: {
+            errorMessage: 'availableDate must be in ISO8601 format'
         }
     },
     type: {
@@ -74,12 +97,35 @@ exports.addUpdateCarBodySchema = {
             errorMessage: 'Specs must be an array'
         }
     },
-    deleted: {
+    creationTimestamp: {
+        isString: {
+            errorMessage: 'creationTimestamp must be a string'
+        },
+        isISO8601: {
+            errorMessage: 'creationTimestamp must be in ISO8601 format'
+        }
+    },
+    deletionTimestamp: {
+        optional: {
+            options: {
+                checkFalsy: true
+            }
+        },
+        isString: {
+            errorMessage: 'creationTimestamp must be a string'
+        },
+        isISO8601: {
+            errorMessage: 'creationTimestamp must be in ISO8601 format'
+        }
+    }
+};
+exports.addUpdateCarDeletionTimestampBodyValueSchema = {
+    deletionTimestamp: {
         optional: {
             options: {
                 values: undefined
             }
-        },
+        }
     }
 };
 exports.getCarsQuerySchema = {
@@ -168,6 +214,6 @@ exports.carsParamIdSchema = {
             version: 'all',
             errorMessage: 'Invalid ID parameter: must be an UUID'
         }
-    },
+    }
 };
 //# sourceMappingURL=cars.js.map

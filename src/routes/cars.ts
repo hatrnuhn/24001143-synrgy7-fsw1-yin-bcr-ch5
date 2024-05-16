@@ -7,19 +7,18 @@ import {
     deleteCar
 } from '../services/cars';
 import { checkSchema } from "express-validator";
-import { addUpdateCarBodySchema, carsParamIdSchema, getCarsQuerySchema } from '../validationSchemas/cars';
+import { addUpdateCarBodySchema, carsParamIdSchema, getCarsQuerySchema, addUpdateCarDeletionTimestampBodyValueSchema } from '../validationSchemas/cars';
 import validate from '../middlewares/validation';
-import { checkIdExistence } from '../middlewares/utils';
 
 const router = Router();
 
-router.post('/', checkSchema(addUpdateCarBodySchema, ['body']), validate.addUpdateCarBody, addCar);
+router.post('/', checkSchema(addUpdateCarDeletionTimestampBodyValueSchema, ['body']), validate.addUpdateCarDeletionTimestampBodyValue, checkSchema(addUpdateCarBodySchema, ['body']), validate.addUpdateCarBody, addCar);
 
 router.get('/', checkSchema(getCarsQuerySchema, ['query']), validate.getCarsQuery, getCars);
-router.get('/:id', checkSchema(carsParamIdSchema, ['params']), validate.carsParamsId, checkIdExistence, getCarById);
+router.get('/:id', checkSchema(carsParamIdSchema, ['params']), validate.carsParamsId, getCarById);
 
-router.put('/:id', checkSchema(carsParamIdSchema, ['params']), validate.carsParamsId, checkIdExistence, checkSchema(addUpdateCarBodySchema, ['body']), validate.addUpdateCarBody, updateCar);
+router.put('/:id', checkSchema(addUpdateCarDeletionTimestampBodyValueSchema, ['body']), validate.addUpdateCarDeletionTimestampBodyValue, checkSchema(carsParamIdSchema, ['params']), validate.carsParamsId, checkSchema(addUpdateCarBodySchema, ['body']), validate.addUpdateCarBody, updateCar);
 
-router.delete('/:id', checkSchema(carsParamIdSchema, ['params']), validate.carsParamsId, checkIdExistence, deleteCar);
+router.delete('/:id', checkSchema(carsParamIdSchema, ['params']), validate.carsParamsId, deleteCar);
 
 export default router;

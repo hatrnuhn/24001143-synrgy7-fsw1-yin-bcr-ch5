@@ -1,20 +1,16 @@
 import express from 'express';
 import router from './routes';
 import { printRequest } from './middlewares/utils';
-import { connectToDB } from './mongoose';
 import dotenv from 'dotenv';
+import path from 'path';
 
 dotenv.config();
-
-const uri = process.env.dbURI;
-connectToDB(uri as string)
-  .catch(console.dir);
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded( { extended: false } ));
 
 app.use('/api', printRequest, router);

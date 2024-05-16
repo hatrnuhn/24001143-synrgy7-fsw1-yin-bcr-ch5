@@ -19,122 +19,178 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteCar = exports.updateCar = exports.getCarById = exports.getCars = exports.addCar = void 0;
 const http_status_codes_1 = require("http-status-codes");
 const uuid_1 = require("uuid");
 const express_validator_1 = require("express-validator");
-const cars_1 = __importDefault(require("../mongoose/schemas/cars"));
-const utils_1 = require("../mongoose/utils");
+const client_1 = require("@prisma/client");
 const addCar = (req, res) => {
     const addCarBodyMatches = (0, express_validator_1.matchedData)(req);
     const newUuid = (0, uuid_1.v4)();
     const newCar = Object.assign({ id: newUuid }, addCarBodyMatches);
-    const savedCar = (0, utils_1.saveToDB)('Car', newCar, cars_1.default);
+    const prisma = new client_1.PrismaClient();
+    const savedCar = prisma.car.create({
+        data: newCar
+    });
     savedCar
-        .then(v => {
-        console.log(`Saved to database, id: ${v.id}`);
-        res.status(http_status_codes_1.StatusCodes.CREATED).json(newCar);
+        .then((car) => {
+        res.status(http_status_codes_1.StatusCodes.CREATED).json(car);
     })
-        .catch(err => res.sendStatus(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR));
+        .catch((e) => {
+        console.error(e);
+        res.sendStatus(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR);
+    })
+        .finally(() => __awaiter(void 0, void 0, void 0, function* () {
+        yield prisma.$disconnect();
+    }));
 };
 exports.addCar = addCar;
 const getCars = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const prisma = new client_1.PrismaClient();
     try {
         const { availability, manufacture, transmission, sortByYear, year } = (0, express_validator_1.matchedData)(req);
-        const carsFromDB = yield (0, utils_1.getDataFromDB)(cars_1.default);
-        let carsFiltered = (0, utils_1.cleanCarsFromDB)(carsFromDB);
-        carsFiltered = carsFiltered.filter(c => !c.deleted);
+        let query = {
+            where: {
+                deletionTimestamp: null
+            },
+            orderBy: undefined
+        };
         switch (availability) {
             case 'yes':
-                carsFiltered = carsFiltered.filter(c => c.available);
+                query = Object.assign(Object.assign({}, query), { where: Object.assign(Object.assign({}, query.where), { availableDate: {
+                            lte: new Date()
+                        } }) });
                 break;
             case 'no':
-                carsFiltered = carsFiltered.filter(c => (!c.available));
+                query = Object.assign(Object.assign({}, query), { where: Object.assign(Object.assign({}, query.where), { availableDate: {
+                            gt: new Date()
+                        } }) });
                 break;
             case 'all':
                 break;
             default:
                 break;
         }
-        if (manufacture)
-            carsFiltered = carsFiltered.filter(c => c.manufacture.toLowerCase().includes(manufacture));
-        if (year)
-            carsFiltered = carsFiltered.filter(c => +c.year === +year);
-        if (transmission)
-            carsFiltered = carsFiltered.filter(c => c.transmission.toLowerCase().includes(transmission));
+        if (manufacture) {
+            query = Object.assign(Object.assign({}, query), { where: Object.assign(Object.assign({}, query.where), { manufacture: {
+                        equals: manufacture,
+                        mode: 'insensitive'
+                    } }) });
+        }
+        if (year) {
+            query = Object.assign(Object.assign({}, query), { where: Object.assign(Object.assign({}, query.where), { year: Number(year) }) });
+        }
+        if (transmission) {
+            query = Object.assign(Object.assign({}, query), { where: Object.assign(Object.assign({}, query.where), { transmission: {
+                        equals: transmission,
+                        mode: 'insensitive'
+                    } }) });
+        }
         switch (sortByYear) {
             case 'asc':
-                carsFiltered.sort((a, b) => a.year - b.year);
+                query = Object.assign(Object.assign({}, query), { orderBy: {
+                        year: 'asc'
+                    } });
                 break;
             case 'desc':
-                carsFiltered.sort((a, b) => b.year - a.year);
+                query = Object.assign(Object.assign({}, query), { orderBy: {
+                        year: 'desc'
+                    } });
                 break;
             default:
                 break;
         }
-        res.status(http_status_codes_1.StatusCodes.OK).json(carsFiltered);
+        const cars = yield prisma.car.findMany(query);
+        res.status(http_status_codes_1.StatusCodes.OK).json(cars);
     }
     catch (err) {
         console.log(err);
         res.sendStatus(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR);
     }
+    finally {
+        yield prisma.$disconnect();
+    }
 });
 exports.getCars = getCars;
 const getCarById = (req, res) => {
-    const index = res.locals.carFoundIndex;
-    const carsFromDB = (0, utils_1.getDataFromDB)(cars_1.default);
-    carsFromDB
-        .then(carsDB => {
-        const cars = (0, utils_1.cleanCarsFromDB)(carsDB);
-        console.log(cars[index]);
-        res.status(http_status_codes_1.StatusCodes.OK).json(cars[index]);
-    })
-        .catch(err => {
-        console.log(err);
-        res.sendStatus(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR);
+    const { id } = (0, express_validator_1.matchedData)(req);
+    const prisma = new client_1.PrismaClient();
+    const car = prisma.car.findFirstOrThrow({
+        where: {
+            id: id
+        }
     });
+    car
+        .then((c) => {
+        if (c.deletionTimestamp)
+            throw { code: 'P2025' };
+        else
+            res.status(http_status_codes_1.StatusCodes.OK).json(c);
+    })
+        .catch((e) => {
+        console.log(e);
+        switch (e.code) {
+            case 'P2025':
+                res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: 'Car is not found' });
+                break;
+            default:
+                res.sendStatus(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR);
+                break;
+        }
+    })
+        .finally(() => __awaiter(void 0, void 0, void 0, function* () {
+        yield prisma.$disconnect();
+    }));
 };
 exports.getCarById = getCarById;
 const updateCar = (req, res) => {
     const _a = (0, express_validator_1.matchedData)(req), { id } = _a, updateCarBodyMatches = __rest(_a, ["id"]);
-    const docs = cars_1.default.findOne({ id: id }).orFail();
-    docs
-        .then(c => {
-        c.plate = updateCarBodyMatches.plate;
-        c.transmission = updateCarBodyMatches.transmission;
-        c.manufacture = updateCarBodyMatches.manufacture;
-        c.model = updateCarBodyMatches.model;
-        c.available = updateCarBodyMatches.available;
-        c.type = updateCarBodyMatches.type;
-        c.year = updateCarBodyMatches.year;
-        c.options = updateCarBodyMatches.options;
-        c.deleted = updateCarBodyMatches.deleted;
-        c.save();
-        res.status(http_status_codes_1.StatusCodes.ACCEPTED).json((0, utils_1.cleanCarFromDB)(c));
-    })
-        .catch(err => {
-        console.log(err);
-        res.sendStatus(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR);
+    const prisma = new client_1.PrismaClient();
+    const updatedCar = prisma.car.update({
+        where: {
+            id
+        },
+        data: Object.assign({ id }, updateCarBodyMatches)
     });
+    updatedCar
+        .then(c => res.status(http_status_codes_1.StatusCodes.OK).json(c))
+        .catch(e => {
+        console.log(e);
+        switch (e.code) {
+            case 'P2025':
+                res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: 'Car is not found' });
+                break;
+            default:
+                res.sendStatus(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR);
+                break;
+        }
+    })
+        .finally(() => __awaiter(void 0, void 0, void 0, function* () { return yield prisma.$disconnect(); }));
 };
 exports.updateCar = updateCar;
 const deleteCar = (req, res) => {
-    const { id } = (0, express_validator_1.matchedData)(req);
-    const docs = cars_1.default.findOne({ id: id }).orFail();
-    docs
-        .then(c => {
-        c.deleted = true;
-        c.save();
-        res.sendStatus(http_status_codes_1.StatusCodes.NO_CONTENT);
-    })
-        .catch(err => {
-        console.log(err);
-        res.sendStatus(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR);
+    const _a = (0, express_validator_1.matchedData)(req), { id } = _a, deleteCarBodyMatches = __rest(_a, ["id"]);
+    const prisma = new client_1.PrismaClient();
+    const deletedCar = prisma.car.update({
+        where: {
+            id
+        },
+        data: Object.assign(Object.assign({ id }, deleteCarBodyMatches), { deletionTimestamp: new Date().toISOString() })
     });
+    deletedCar
+        .then((c) => res.status(http_status_codes_1.StatusCodes.OK).json(c))
+        .catch(e => {
+        switch (e.code) {
+            case 'P2025':
+                res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: 'Car is not found' });
+                break;
+            default:
+                res.sendStatus(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR);
+                break;
+        }
+    })
+        .finally(() => __awaiter(void 0, void 0, void 0, function* () { return yield prisma.$disconnect(); }));
 };
 exports.deleteCar = deleteCar;
 //# sourceMappingURL=cars.js.map

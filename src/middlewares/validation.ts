@@ -1,8 +1,8 @@
 import { RequestHandler } from "express";
-import { validationResult } from "express-validator";
+import { matchedData, validationResult } from "express-validator";
 import { StatusCodes } from "http-status-codes";
 
-const addUpdateCarBody: RequestHandler = (req, res, next) => {
+export const addUpdateCarBody: RequestHandler = (req, res, next) => {
     const addCarBodyResult = validationResult(req);
 
     if (!addCarBodyResult.isEmpty()) {
@@ -10,14 +10,14 @@ const addUpdateCarBody: RequestHandler = (req, res, next) => {
         addCarBodyResult.array().forEach((v, i) => {
             errMessages.push({ error: v.msg });
         });
-        res.status(StatusCodes.BAD_REQUEST).json(errMessages);
+        res.status(StatusCodes.BAD_REQUEST).json('errMessages');
         return;
     }
 
     next();
 }
 
-const getCarsQuery: RequestHandler = (req, res, next) => {
+export const getCarsQuery: RequestHandler = (req, res, next) => {
     const getCarsQueryResult = validationResult(req);
 
     if (!getCarsQueryResult.isEmpty()) {
@@ -32,7 +32,7 @@ const getCarsQuery: RequestHandler = (req, res, next) => {
     next();
 }
 
-const carsParamsId: RequestHandler = (req, res, next) => {
+export const carsParamsId: RequestHandler = (req, res, next) => {
     const carsParamIdResult = validationResult(req);
 
     if (!carsParamIdResult.isEmpty()) {
@@ -47,8 +47,32 @@ const carsParamsId: RequestHandler = (req, res, next) => {
     next();
 }
 
+export const addUpdateCarDeletionTimestampBodyValue: RequestHandler = (req, res, next) => {
+    const { deletionTimestamp } = matchedData(req);
+    
+    if (deletionTimestamp === null || typeof deletionTimestamp === 'string' || deletionTimestamp === undefined) next();
+    else res.status(StatusCodes.BAD_REQUEST).json({error: 'DeletionTimestamp must be a null OR a string, otherwise omit it'});
+}
+
+export const carImageParams: RequestHandler = (req, res, next) => {
+    const carImageParams = validationResult(req);
+
+    if (!carImageParams.isEmpty()) {
+        const errMessages: { error: string }[] = [];
+        carImageParams.array().forEach((v, i) => {
+            errMessages.push({ error: v.msg});
+        })
+        res.status(StatusCodes.BAD_REQUEST).json(errMessages);
+        return;    
+    }
+
+    next();
+}
+
 export default {
     addUpdateCarBody,
     getCarsQuery,
-    carsParamsId
+    carsParamsId,
+    addUpdateCarDeletionTimestampBodyValue,
+    carImageParams
 }

@@ -1,6 +1,3 @@
-import CarSchema from "../mongoose/schemas/cars";
-import { saveToDB } from "../mongoose/utils";
-
 export const carsOrigin = [
 	{
 		id: "6e2bc663-5197-441a-957b-bc75e4a2da7c",
@@ -683,17 +680,92 @@ export const carsOrigin = [
 ];
 
 export interface Car {
-    id: string,
-    plate: string,
-    transmission: string,
-    manufacture: string,
-    model: string,
-    available: boolean,
-    type: string,
-    year: number,
-    options: string[],
-    specs: string[],
-    deleted?: boolean
-}
+	id:                 string,    // @id @db.Uuid
+	plate:              string,
+	manufacture:        string,
+	model:              string,
+	rate:               string,   // @db.Decimal
+	description:        string,
+	transmission:       string,
+	type:               string,
+	year:               number,
+	options:            string[],
+	specs:              string[],
+	available_date:     string,  // @db.Date
+	creation_timestamp: string,  // @db.Timestamptz(6)
+	deletion_timestamp?: string // @db.Timestamptz(6)
+};
+// This code was what used to populate the Cars table the first time
+// const newCars: Car[] = [];
 
-export const cars = [...carsOrigin as Car[]];
+// const lorem = new LoremIpsum({
+// 	wordsPerSentence: {
+// 		min: 8,
+// 		max: 20
+// 	}
+// });
+
+// function newDate() {
+// 	const date = new Date();
+// 	return date.toISOString();
+// }
+// carsOrigin.forEach(c => {
+// 	newCars.push({
+// 		id: c.id,
+// 		plate: c.plate,
+// 		manufacture: c.manufacture,
+// 		model: c.model,
+// 		rate: `${getRandomIDR()}`,
+// 		description: lorem.generateSentences(1),
+// 		transmission: c.transmission,
+// 		type: c.type,
+// 		year: c.year,
+// 		options: c.options,
+// 		specs: c.specs,
+// 		available_date: newDate(),
+// 		creation_timestamp: newDate(),
+// 	});
+// });
+
+// function getRandomIDR() {
+//     // Define the minimum and maximum values
+//     const min = 300000;
+//     const max = 700000;
+//     const increment = 50000;
+
+//     // Calculate the number of possible increments
+//     const incrementsCount = (max - min) / increment + 1;
+
+//     // Generate a random index
+//     const randomIndex = Math.floor(Math.random() * incrementsCount);
+
+//     // Calculate the random amount
+//     const randomAmount = min + (randomIndex * increment);
+
+//     return randomAmount;
+// }
+
+// import { PrismaClient } from '@prisma/client'
+
+// const prisma = new PrismaClient()
+
+// async function main() {
+// 	newCars.forEach(async (c) => {
+// 		const car = await prisma.car.createMany({
+// 			data: [
+// 				...newCars
+// 			],
+// 		})
+// 	});
+// };
+
+// main()
+//   .then(async () => {
+// 	console.log("created");
+//     await prisma.$disconnect()
+//   })
+//   .catch(async (e) => {
+//     console.error(e)
+//     await prisma.$disconnect()
+//     process.exit(1)
+//   })

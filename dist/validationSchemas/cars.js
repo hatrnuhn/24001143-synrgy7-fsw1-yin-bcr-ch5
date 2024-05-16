@@ -135,11 +135,7 @@ exports.getCarsQuerySchema = {
                 checkFalsy: true
             }
         },
-        toLowerCase: true,
-        isIn: {
-            options: [['yes', 'no', 'all']],
-            errorMessage: 'Invalid availability query value'
-        }
+        toLowerCase: true
     },
     manufacture: {
         optional: {
@@ -160,21 +156,11 @@ exports.getCarsQuerySchema = {
         },
         isLength: {
             options: {
-                min: 4,
-                max: 4
+                max: 16
             },
-            errorMessage: 'sortByYear value must contain 4 characters'
+            errorMessage: 'Year query value must be 4-digits numeric'
         },
-        isNumeric: {
-            options: {
-                no_symbols: true
-            },
-            errorMessage: 'Year query must be numeric'
-        },
-        toInt: true,
-        isInt: {
-            errorMessage: 'Year query is not an integer'
-        }
+        toInt: true
     },
     transmission: {
         optional: {
@@ -183,13 +169,6 @@ exports.getCarsQuerySchema = {
             }
         },
         toLowerCase: true,
-        isAscii: {
-            errorMessage: 'If provided, transmission chars must be ASCII chars'
-        },
-        isIn: {
-            options: [['automatic', 'automanual', 'manual']],
-            errorMessage: 'Invalid transmission query value'
-        }
     },
     sortByYear: {
         optional: {
@@ -198,10 +177,6 @@ exports.getCarsQuerySchema = {
             }
         },
         toLowerCase: true,
-        isIn: {
-            options: [['asc', 'desc']],
-            errorMessage: 'Invalid sortByYear query value'
-        }
     }
 };
 exports.carsParamIdSchema = {

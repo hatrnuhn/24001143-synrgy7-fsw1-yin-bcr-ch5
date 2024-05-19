@@ -3,21 +3,7 @@ import { matchedData, validationResult } from "express-validator";
 import { StatusCodes } from "http-status-codes";
 import Car from "../../../knex/models/Car";
 import CarImage from "../../../knex/models/CarImage";
-
-const carImagesParams: RequestHandler = async (req, res, next) => {
-    const carImageParams = validationResult(req);
-    
-    if (!carImageParams.isEmpty()) {
-        const errMessages: { error: string }[] = [];
-        carImageParams.array().forEach((v, i) => {
-            errMessages.push({ error: v.msg});
-        })
-        res.status(StatusCodes.BAD_REQUEST).json(errMessages);
-        return;    
-    }
-
-    next();
-};
+import { validationResults } from "../utils";
 
 const carImagesParamsExistence: RequestHandler = async (req, res, next) => {
     const { carId, imageId } = matchedData(req);
@@ -57,7 +43,7 @@ const carImagesCount: RequestHandler = async (req, res, next) => {
 };
 
 export default {
-    carImagesParams,
+    validationResults,
     carImagesParamsExistence,
     carImagesCount
 }

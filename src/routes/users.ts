@@ -7,13 +7,25 @@ import validate from '../middlewares/validation/users';
 
 const router = Router();
 
-router.post('/', checkSchema(addUserBodySchema, ['body']), validate.addPatchUserBody, addUser);
+router.post('/', checkSchema(addUserBodySchema, ['body']), 
+    validate.validationResults, 
+    addUser);
 
 router.get('/', getUsers);
-router.get('/:userId', checkSchema(userIdParamSchema, ['params']), validate.userIdParam, getUserById);
+router.get('/:userId', checkSchema(userIdParamSchema, ['params']), 
+    validate.validationResults, 
+    getUserById);
 
-router.patch('/:userId', checkSchema(userIdParamSchema, ['params']), validate.userIdParam, validate.userIdExistence, checkSchema(patchUserBodySchema, ['body']), validate.addPatchUserBody, patchUser);
+router.patch('/:userId', checkSchema(userIdParamSchema, ['params']), 
+    validate.validationResults,
+    validate.userIdExistence, 
+    checkSchema(patchUserBodySchema, ['body']), 
+    validate.validationResults, 
+    patchUser);
 
-router.delete('/:userId', checkSchema(userIdParamSchema, ['params']), validate.userIdParam, validate.userIdExistence, deleteUser);
+router.delete('/:userId', checkSchema(userIdParamSchema, ['params']), 
+    validate.validationResults, 
+    validate.userIdExistence, 
+    deleteUser);
 
 export default router;

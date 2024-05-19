@@ -7,8 +7,22 @@ import { uploadCarImage, deleteCarImage } from '../../../middlewares/uploads';
 
 const router = Router();
 
-router.get('/:carId', checkSchema(carImageParamsSchema, ['params']), validate.carImagesParams, validate.carImagesParamsExistence, getCarImagesOfCar);
-router.post('/:carId', checkSchema(carImageParamsSchema, ['params']), validate.carImagesParams, validate.carImagesParamsExistence, validate.carImagesCount, uploadCarImage, addCarImageRecord);
-router.delete('/:carId/:imageId', checkSchema(carImageParamsSchema, ['params']), validate.carImagesParams, validate.carImagesParamsExistence, deleteCarImage, deleteCarImageRecord);
+router.get('/:carId', checkSchema(carImageParamsSchema, ['params']), 
+    validate.validationResults, 
+    validate.carImagesParamsExistence, 
+    getCarImagesOfCar);
+
+router.post('/:carId', checkSchema(carImageParamsSchema, ['params']), 
+    validate.validationResults, 
+    validate.carImagesParamsExistence, 
+    validate.carImagesCount, 
+    uploadCarImage, 
+    addCarImageRecord);
+
+router.delete('/:carId/:imageId', checkSchema(carImageParamsSchema, ['params']), 
+    validate.validationResults, 
+    validate.carImagesParamsExistence, 
+    deleteCarImage, 
+    deleteCarImageRecord);
 
 export default router;

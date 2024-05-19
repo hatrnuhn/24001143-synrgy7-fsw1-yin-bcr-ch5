@@ -12,13 +12,32 @@ import validate from '../middlewares/validation/cars';
 
 const router = Router();
 
-router.post('/', checkSchema(addPatchCarDeletionTimestampBodyValueSchema, ['body']), validate.addUpdateCarDeletionTimestampBodyValue, checkSchema(addCarBodySchema, ['body']), validate.addPatchCarBody, addCar);
+router.post('/', checkSchema(addPatchCarDeletionTimestampBodyValueSchema, ['body']), 
+    validate.addUpdateCarDeletionTimestampBodyValue, 
+    checkSchema(addCarBodySchema, ['body']), 
+    validate.validationResults, 
+    addCar);
 
-router.get('/', checkSchema(getCarsQuerySchema, ['query']), validate.getCarsQuery, getCars);
-router.get('/:id', checkSchema(carsParamIdSchema, ['params']), validate.carsParamsId, getCarById);
+router.get('/', checkSchema(getCarsQuerySchema, ['query']), 
+    validate.validationResults, 
+    getCars);
 
-router.patch('/:id', checkSchema(addPatchCarDeletionTimestampBodyValueSchema, ['body']), validate.addUpdateCarDeletionTimestampBodyValue, checkSchema(carsParamIdSchema, ['params']), validate.carsParamsId, validate.carIdExistence, checkSchema(patchCarBodySchema, ['body']), validate.addPatchCarBody, patchCar);
+router.get('/:id', checkSchema(carsParamIdSchema, ['params']), 
+    validate.validationResults, 
+    getCarById);
 
-router.delete('/:id', checkSchema(carsParamIdSchema, ['params']), validate.carsParamsId, validate.carIdExistence, deleteCar);
+router.patch('/:id', checkSchema(addPatchCarDeletionTimestampBodyValueSchema, ['body']), 
+    validate.addUpdateCarDeletionTimestampBodyValue, 
+    checkSchema(carsParamIdSchema, ['params']), 
+    validate.validationResults, 
+    validate.carIdExistence, 
+    checkSchema(patchCarBodySchema, ['body']), 
+    validate.validationResults, 
+    patchCar);
+
+router.delete('/:id', checkSchema(carsParamIdSchema, ['params']), 
+    validate.validationResults, 
+    validate.carIdExistence, 
+    deleteCar);
 
 export default router;

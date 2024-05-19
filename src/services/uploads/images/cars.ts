@@ -1,45 +1,33 @@
-import { PrismaClient } from "@prisma/client";
-import { Request, Response } from "express";
+import { Request, RequestHandler, Response } from "express";
 import { matchedData } from "express-validator";
 import { StatusCodes } from "http-status-codes";
+import CarImage from "../../../knex/models/CarImage";
 
-export const addCarImageRecord = (req: Request, res: Response) => {
+export const addCarImageRecord = async (req: Request, res: Response) => {
     const { carId } = matchedData(req);
-    const { filePath } = res.locals;
-
-    const prisma = new PrismaClient();
-    const savedImage = prisma.carImage.create({
-        data: {
+    const savedImage = await CarImage.query()
+        .insertAndFetch({
             carId,
-            filePath,
-        }
-    });
+            filename: res.locals.imageFilename
+        });
+    
+    res.status(StatusCodes.CREATED).json(savedImage);
+};
 
-    savedImage
-        .then(i => res.status(StatusCodes.CREATED).json(i))
-        .catch(e => {
-            console.log(e);
-            res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
-        })
-        .finally(async () => await prisma.$disconnect());
-}
-
-export const deleteCarImageRecord = (req: Request, res: Response) => {
+export const deleteCarImageRecord = async (req: Request, res: Response) => {
     const { imageId } = matchedData(req);
 
-    const prisma = new PrismaClient();
+    await CarImage.query()
+        .deleteById(imageId);
 
-    const deletedImage = prisma.carImage.delete({
-        where: {
-            id: parseInt(imageId)
-        }
-    });
+    res.sendStatus(StatusCodes.NO_CONTENT);
+};
 
-    deletedImage
-        .then(i => res.status(StatusCodes.OK).json({ msg: `Image with ID ${imageId} deleted successfully` }))
-        .catch(e => {
-            console.log(e);
-            res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
-        })
-        .finally(async () => await prisma.$disconnect());
-}
+export const getCarImagesOfCar: RequestHandler = async (req, res) => {
+    const { carId } = matchedData(req);
+
+    const carImages = await CarImage.query()
+        .where({ carId, });
+    
+    res.status(StatusCodes.OK).json(carImages);
+};

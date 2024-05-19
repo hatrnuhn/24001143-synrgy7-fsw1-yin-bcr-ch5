@@ -1,18 +1,20 @@
-export interface AddUpdateCarReqBody {
+export interface AddPatchCarReqBody {
+    id?: string,
     plate: string,
     transmission: string,
     manufacture: string,
     model: string,
-    availableDate: string,
     description: string,
     rate: string,
     type: string,
     year: number,
     options: string[],
     specs: string[],
-    creationTimestamp: string,
-    deletionTimestamp?: string
-}
+    availableAt?: string,
+    createdAt?: string,
+    updatedAt?: string,
+    deletedAt?: string
+};
 
 export interface GetCarsQuery {
     availability?: string,
@@ -20,4 +22,4 @@ export interface GetCarsQuery {
     sortByYear?: string,
     transmission?: string,
     year?: string
-}
+};

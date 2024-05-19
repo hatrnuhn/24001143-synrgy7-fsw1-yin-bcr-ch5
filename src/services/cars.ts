@@ -1,235 +1,100 @@
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { AddUpdateCarReqBody, GetCarsQuery } from '../dtos/cars';
-import { v4 as uuidv4 } from 'uuid';
+import { AddPatchCarReqBody, GetCarsQuery } from '../dtos/cars';
 import { matchedData } from 'express-validator';
-import { PrismaClient, Prisma } from '@prisma/client';
+import Car from '../knex/models/Car';
 
-export const addCar = (req: Request<{}, {}, AddUpdateCarReqBody>, res: Response) => {
+export const addCar = async (req: Request<{}, {}, AddPatchCarReqBody>, res: Response) => {
     const addCarBodyMatches = matchedData(req);
 
-    const newUuid = uuidv4();
-
-    const newCar = {
-        id: newUuid,
-        ...addCarBodyMatches as AddUpdateCarReqBody
-    };
-
-    const prisma = new PrismaClient();
-
-    const savedCar = prisma.car.create({
-        data: newCar
-    })
-
-    savedCar
-        .then((car) => {
-            res.status(StatusCodes.CREATED).json(car);
-        })
-        .catch((e) => {
-            console.error(e)
-            res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR)
-        })
-        .finally(async () => {
-            await prisma.$disconnect()
-        })
-}
-
-export const getCars = async (req: Request<{}, {}, {}, GetCarsQuery>, res: Response) => {
-    const prisma = new PrismaClient();
-
-    try {
-        const { availability, manufacture, transmission, sortByYear, year } = matchedData(req) as GetCarsQuery;
-
-        let query: Prisma.CarFindManyArgs = {
-            where: {
-                deletionTimestamp: null
-            },
-            orderBy: undefined
-        }
-
-        switch (availability) {
-            case 'yes':
-                query = {
-                    ...query,
-                    where: {
-                        ...query.where,
-                        availableDate: {
-                            lte: new Date()
-                        }
-                    }
-                }
-                break;
-            case 'no':
-                query = {
-                    ...query,
-                    where: {
-                        ...query.where,
-                        availableDate: {
-                            gt: new Date()
-                        }
-                    }
-                }
-                break;
-            case 'all':
-                break;
-            default:
-                break;
-        }
-    
-        if (manufacture){
-            query = {
-                ...query,
-                where: {
-                    ...query.where,
-                    manufacture: {
-                        equals: manufacture,
-                        mode: 'insensitive'
-                    }
-                }
-            }
-        }
-        if (year){
-            query = {
-                ...query,
-                where: {
-                    ...query.where,
-                    year: Number(year)
-                }
-            }
-        }
-        if (transmission){
-            query = {
-                ...query,
-                where: {
-                    ...query.where,
-                    transmission: {
-                        equals: transmission,
-                        mode: 'insensitive'
-                    }
-                }
-            }
-        }
-    
-        switch (sortByYear) {
-            case 'asc':
-                query = {
-                    ...query,
-                    orderBy: {
-                        year: 'asc'
-                    }
-                }
-                break;
-            case 'desc':
-                query = {
-                    ...query,
-                    orderBy: {
-                        year: 'desc'
-                    }
-                }
-                break;
-            default:
-                break;
-        } 
-    
-        const cars = await prisma.car.findMany(query);
-
-        res.status(StatusCodes.OK).json(cars);
-
+    try {    
+        const newCar = {
+            ...addCarBodyMatches
+        };
+        const savedCar = await Car.query().insertAndFetch(newCar as Car);
+        res.status(StatusCodes.CREATED).json(savedCar);
     } catch (err) {
         console.log(err);
-        res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);   
-    } finally {
-        await prisma.$disconnect();
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }
 
-export const getCarById = (req: Request, res: Response) => {
+export const getCars = async (req: Request<{}, {}, {}, GetCarsQuery>, res: Response) => {
+    const { availability, manufacture, transmission, sortByYear, year } = matchedData(req) as GetCarsQuery;
+
+    try {
+        let cars = await Car.query().where({ deletedAt: null });
+        switch (availability) {
+            case 'yes':
+                cars = cars.filter(c => c.availableAt < new Date());
+                break;
+            case 'no':
+                cars = cars.filter(c => c.availableAt > new Date());
+                break;
+            default:
+                break;
+        }
+        if (manufacture) cars = cars.filter(c => c.manufacture.toLowerCase() === manufacture);
+        if (transmission) cars = cars.filter(c => c.transmission.toLowerCase() === transmission);
+        if (year)  cars = cars.filter(c => c.year === c.year);
+        
+        switch (sortByYear) {
+            case 'asc':
+                cars = cars.sort((a, b) => a.year - b.year);
+                break;
+            case 'desc':
+                cars = cars.sort((a, b) => b.year - a.year)
+            default:
+                break;
+        }
+        res.status(StatusCodes.OK).json(cars);
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
+    }
+}
+
+export const getCarById = async (req: Request, res: Response) => {
     const { id } = matchedData(req);
-    const prisma = new PrismaClient();
 
-    const car = prisma.car.findFirstOrThrow({
-        where: {
-            id: id
-        }
-    });
+    try {
+        const queriedCar = await Car.query()
+            .where({
+                id,
+                deletedAt: null // somehow snakeCaseMapping does not work
+             })
+             .first();
 
-    car
-        .then((c) => {
-            if (c.deletionTimestamp) throw {code: 'P2025'} 
-            else res.status(StatusCodes.OK).json(c);
-        })
-        .catch((e) => {
-            console.log(e);
-            switch (e.code) {
-                case 'P2025':
-                    res.status(StatusCodes.NOT_FOUND).json({msg: 'Car is not found'});
-                    break;
-                default:
-                    res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
-                    break;
-            }
-        })
-        .finally(async () => {
-            await prisma.$disconnect();
-        });
+        if (queriedCar) res.status(StatusCodes.OK).json(queriedCar)
+        else res.status(StatusCodes.NOT_FOUND).json({ msg: 'Car is not found' });
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
+    }
 }
 
-export const updateCar = (req: Request<{}, {}, AddUpdateCarReqBody>, res: Response) => {
-    const { id, ...updateCarBodyMatches } = matchedData(req);
+export const patchCar =  async (req: Request<{}, {}, AddPatchCarReqBody>, res: Response) => {
+    const { id, ...patchCarBodyMatches } = matchedData(req);
 
-    const prisma = new PrismaClient();
-    const updatedCar = prisma.car.update({
-        where: {
-            id
-        },
-        data: {
-            id,
-            ...updateCarBodyMatches
-        }
-    });
+    try {
+        const patchedCar = await Car.query()
+            .patchAndFetchById(id, patchCarBodyMatches);
 
-    updatedCar
-        .then(c => res.status(StatusCodes.OK).json(c))
-        .catch(e => {
-            console.log(e);
-            switch (e.code) {
-                case 'P2025':
-                    res.status(StatusCodes.NOT_FOUND).json({msg: 'Car is not found'});
-                    break;
-                default:
-                    res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
-                    break;
-            }
-        })
-        .finally(async () => await prisma.$disconnect());
+        if (patchedCar) res.status(StatusCodes.OK).json(patchedCar)
+        else (res.status(StatusCodes.NOT_FOUND)).json({ msg: 'Car is not found' });
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
+    }
 }
 
-export const deleteCar = (req: Request, res: Response) => {
-    const { id, ...deleteCarBodyMatches } = matchedData(req);
+export const deleteCar = async (req: Request, res: Response) => {
+    const { id } = matchedData(req);
 
-    const prisma = new PrismaClient();
-    const deletedCar = prisma.car.update({
-        where: {
-            id
-        },
-        data: {
-            id,
-            ...deleteCarBodyMatches,
-            deletionTimestamp: new Date().toISOString()
-        }
-    });
+    try {
+        const deletedCar = await Car.query()
+            .patchAndFetchById(id, { deletedAt: new Date().toISOString() });
 
-    deletedCar
-        .then((c) => res.status(StatusCodes.OK).json(c))
-        .catch(e => {
-            switch (e.code) {
-                case 'P2025':
-                    res.status(StatusCodes.NOT_FOUND).json({msg: 'Car is not found'});
-                    break;
-                default:
-                    res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
-                    break;
-            }
-        })
-        .finally(async () => await prisma.$disconnect());
+        if (deletedCar) res.sendStatus(StatusCodes.NO_CONTENT);
+        else (res.status(StatusCodes.NOT_FOUND)).json({ msg: 'Car is not found' });
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
+    }
 }

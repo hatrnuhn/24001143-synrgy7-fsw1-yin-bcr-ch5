@@ -1,16 +1,17 @@
 import { RequestHandler } from "express";
 import { matchedData, validationResult } from "express-validator";
 import { StatusCodes } from "http-status-codes";
+import Car from "../../knex/models/Car";
 
-export const addUpdateCarBody: RequestHandler = (req, res, next) => {
-    const addCarBodyResult = validationResult(req);
+export const addPatchCarBody: RequestHandler = (req, res, next) => {
+    const addPatchCarBodyResult = validationResult(req);
 
-    if (!addCarBodyResult.isEmpty()) {
+    if (!addPatchCarBodyResult.isEmpty()) {
         const errMessages: { error: string }[] = [];
-        addCarBodyResult.array().forEach((v, i) => {
+        addPatchCarBodyResult.array().forEach((v, i) => {
             errMessages.push({ error: v.msg });
         });
-        res.status(StatusCodes.BAD_REQUEST).json('errMessages');
+        res.status(StatusCodes.BAD_REQUEST).json(errMessages);
         return;
     }
 
@@ -54,25 +55,25 @@ export const addUpdateCarDeletionTimestampBodyValue: RequestHandler = (req, res,
     else res.status(StatusCodes.BAD_REQUEST).json({error: 'DeletionTimestamp must be a null OR a string, otherwise omit it'});
 }
 
-export const carImageParams: RequestHandler = (req, res, next) => {
-    const carImageParams = validationResult(req);
-
-    if (!carImageParams.isEmpty()) {
-        const errMessages: { error: string }[] = [];
-        carImageParams.array().forEach((v, i) => {
-            errMessages.push({ error: v.msg});
+const carIdExistence: RequestHandler = async (req, res, next) => {
+    const { id } = matchedData(req);
+    
+    const queriedCar = await Car.query()
+        .where({
+            id,
+            deletedAt: null
         })
-        res.status(StatusCodes.BAD_REQUEST).json(errMessages);
-        return;    
-    }
+        .first();
 
-    next();
+    if (!queriedCar) return res.status(StatusCodes.NOT_FOUND).json({ msg: 'Car is not found' });
+
+    next()
 }
 
 export default {
-    addUpdateCarBody,
+    addPatchCarBody,
     getCarsQuery,
     carsParamsId,
     addUpdateCarDeletionTimestampBodyValue,
-    carImageParams
+    carIdExistence
 }

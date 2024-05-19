@@ -18,8 +18,9 @@ export const carImageParamsSchema = {
         notEmpty: {
             errorMessage: 'Id parameter cannot be empty'
         },
-        isInt: {
+        isNumeric: {
             errorMessage: 'Id parameter value can only be an integer'
-        }
+        },
+        toInt: true
     }
 }
